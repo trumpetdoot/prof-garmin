@@ -1,8 +1,9 @@
 import express from "express";
 import cors from "cors";
 import { spawn } from "child_process";
-import { fileURLToPath } from "url";
 import path, { dirname } from "path";
+import { fileURLToPath } from "url";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -10,7 +11,6 @@ const app = express();
 app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
 
-// Simulate saving a 30s clip
 const SAMPLE_AUDIO = path.join(__dirname, "sample-clip.mp3");
 
 app.post("/clip", (req, res) => {
@@ -19,50 +19,34 @@ app.post("/clip", (req, res) => {
     [path.join(__dirname, "whisper_runner.py"), SAMPLE_AUDIO]
   );
 
-  let transcript = "";
+  let output = "";
+
   pythonProcess.stdout.on("data", (data) => {
-    transcript += data.toString();
+    output += data.toString();
   });
 
   pythonProcess.stderr.on("data", (data) => {
-    console.error("Whisper error:", data.toString());
+    console.error("Python error:", data.toString());
   });
 
   pythonProcess.on("close", (code) => {
     if (code === 0) {
-      res.json({ transcript: transcript.trim() });
+      try {
+        const cleanOutput = output.trim();
+        const result = JSON.parse(cleanOutput); // must be valid JSON
+        res.json({
+          summary: result.summary,
+          source_pages: result.source_pages,
+        });
+      } catch (err) {
+        console.error("Failed to parse Python output:", output);
+        res.status(500).json({ error: "Failed to parse Python output" });
+      }
     } else {
-      res.status(500).json({ error: "Transcription failed" });
+      res.status(500).json({ error: "Processing failed" });
     }
   });
 });
-
-app.post("/query", (req, res) => {
-  const { transcript } = req.body;
-  if(!transcript) return res.status(400).json({ error: "Transcript is required "});
-
-  const py = spawn("python3", ["./query_textbook.py"]);
-
-  let output = "";
-  py.stdout.on("data", (data) => {
-    output += data.toString();
-  })
-
-  py.stderr.on("data", (data) => {
-    console.error("Python Error: ", data.toString())
-  })
-  py.on("close", (code) => {
-    try {
-      const result = JSON.parse(output);
-      res.json(result);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to parse python output"});
-    }
-  })
-
-  py.stdin.write(JSON.stringify({ transcript }))
-  py.stdin.end();
-})
 
 const PORT = 3000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

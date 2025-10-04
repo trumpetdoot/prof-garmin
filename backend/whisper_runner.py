@@ -1,16 +1,22 @@
 import sys
-import whisper
+import json
+from whisper import load_model  # or whatever Whisper wrapper you use
+from query_textbook import summarize_transcript
 
-# Get audio file path from command-line argument
-if len(sys.argv) < 2:
-    print("No audio file provided", file=sys.stderr)
-    sys.exit(1)
+AUDIO_FILE = sys.argv[1]  # path passed from Node
 
-audio_file = sys.argv[1]
+# 1️⃣ Load Whisper model
+model = load_model("base", device="cpu")
 
-# Load Whisper model (choose base for speed, or small)
-model = whisper.load_model("base")
-result = model.transcribe(audio_file)
+# 2️⃣ Transcribe
+result = model.transcribe(AUDIO_FILE)
+transcript = result["text"]
 
-# Print transcript to stdout so Node can read it
-print(result["text"])
+# 3️⃣ Summarize textbook info
+summary_data = summarize_transcript(transcript, top_k=3)
+
+# 4️⃣ Print JSON only
+print(json.dumps({
+    "summary": summary_data["summary"],
+    "source_pages": summary_data["source_pages"]
+}))

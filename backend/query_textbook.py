@@ -1,55 +1,87 @@
+# query_textbook.py
+import os
+import sys
+import json
+from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer
 from pinecone import Pinecone
-import os
-from dotenv import load_dotenv
+from transformers import pipeline
 
 load_dotenv()
 
-# Load embedding model (MiniLM)
-model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+# ---------- Load models ----------
+# Embedding model
+embedding_model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
-# Initialize Pinecone
-pc = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
-index_name = "textbook-index"
-index = pc.Index(index_name)
+# Summarization pipeline
+summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 
+# ---------- Initialize Pinecone ----------
+PINECONE_API_KEY = os.environ.get("PINECONE_API_KEY")
+if not PINECONE_API_KEY:
+    raise ValueError("PINECONE_API_KEY not set in environment")
+
+pc = Pinecone(api_key=PINECONE_API_KEY)
+INDEX_NAME = "textbook-index"
+index = pc.Index(INDEX_NAME)
+
+
+# ---------- Core functions ----------
 def query_textbook(transcript: str, top_k: int = 3):
-    """
-    Query Pinecone with a transcript and return top_k relevant textbook chunks.
-    
-    Args:
-        transcript (str): The transcript text to search for.
-        top_k (int): Number of top matches to return.
+    """Return top_k relevant textbook chunks for a transcript."""
+    query_embedding = embedding_model.encode([transcript], convert_to_numpy=True).tolist()[0]
 
-    Returns:
-        List[dict]: Each dict contains 'score', 'page', and 'text'.
-    """
-    # 1️⃣ Embed the transcript
-    query_embedding = model.encode([transcript], convert_to_numpy=True).tolist()[0]
-
-    # 2️⃣ Query Pinecone
     results = index.query(
         vector=query_embedding,
         top_k=top_k,
         include_metadata=True
     )
 
-    # 3️⃣ Format output
     matches = []
-    for match in results["matches"]:
+    for match in results.get("matches", []):
         matches.append({
             "score": match["score"],
             "page": match["metadata"]["page"],
             "text": match["metadata"]["text"]
         })
-    
     return matches
 
-# ---------- Example usage ----------
-transcript_text = "What are data systems?"
 
-top_chunks = query_textbook(transcript_text, top_k=3)
+def summarize_transcript(transcript: str, top_k: int = 3, max_length: int = 250):
+    """Query the textbook and summarize the top chunks."""
+    top_chunks = query_textbook(transcript, top_k=top_k)
 
-for i, chunk in enumerate(top_chunks):
-    print(f"Match {i+1} | Score: {chunk['score']:.3f} | Page: {chunk['page']}")
-    print(f"Text: {chunk['text']}\n")
+    if not top_chunks:
+        return {"summary": "No relevant information found", "source_pages": []}
+
+    combined_text = "\n\n".join([f"Page {chunk['page']}:\n{chunk['text']}" for chunk in top_chunks])
+    source_pages = [chunk["page"] for chunk in top_chunks]
+
+    summary_result = summarizer(combined_text, max_length=max_length, min_length=50, do_sample=False)
+    summary = summary_result[0]["summary_text"]
+
+    return {
+        "summary": summary.strip(),
+        "source_pages": source_pages
+    }
+
+
+# ---------- Command-line interface ----------
+if __name__ == "__main__":
+    # Read transcript JSON from stdin
+    try:
+        input_data = json.load(sys.stdin)
+        transcript_text = input_data.get("transcript", "")
+        if not transcript_text:
+            raise ValueError("Transcript key not found or empty")
+    except Exception as e:
+        print(json.dumps({"error": f"Failed to read input: {str(e)}"}))
+        sys.exit(1)
+
+    # Generate summary
+    try:
+        result = summarize_transcript(transcript_text, top_k=3)
+        print(json.dumps(result))
+    except Exception as e:
+        print(json.dumps({"error": f"Failed to summarize transcript: {str(e)}"}))
+        sys.exit(1)

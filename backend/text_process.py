@@ -1,3 +1,5 @@
+# we run this file whenever the textbook.pdf file gets updated
+
 import os
 import nltk
 nltk.download("punkt_tab")
