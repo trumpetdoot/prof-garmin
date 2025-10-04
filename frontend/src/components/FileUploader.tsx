@@ -22,24 +22,25 @@ const FileUploader = () => {
   };
 
   const handleUpload = async () => {
-    if (pdfFile && videoFile) {
+    if (pdfFile) {
       const formData = new FormData();
       formData.append("pdf", pdfFile);
-      // Pass files through navigation state
+
       try {
         const res = await fetch("http://localhost:3000/upload", {
           method: "POST",
           body: formData,
         });
 
-        if (!res) throw new Error("PDF upload failed");
+        if (!res.ok) throw new Error("PDF upload failed");
         const data = await res.json();
-        console.log("Uploaded: ", data);
+        console.log("Uploaded PDF: ", data);
 
+        // Navigate to player, keep video in state (not uploaded yet)
         navigate("/player", {
           state: {
             pdfFile: pdfFile,
-            videoFile: videoFile,
+            videoFile: videoFile, // kept client-side only
           },
         });
       } catch (err) {
@@ -47,9 +48,8 @@ const FileUploader = () => {
         toast.error("Upload Failed", { description: String(err) });
       }
     } else {
-      toast.error("Please select both files", {
-        description:
-          "You need to upload both a PDF textbook and a video file to continue.",
+      toast.error("Please select a PDF", {
+        description: "You need to upload a PDF textbook to continue.",
       });
     }
   };

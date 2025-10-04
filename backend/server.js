@@ -12,57 +12,81 @@ const app = express();
 app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
 
-const SAMPLE_AUDIO = path.join(__dirname, "sample-clip.mp3");
 const storage = multer.diskStorage({
   destination: './assets',
   filename: (req, file, cb) => {
-    cb(null, file.originalname)
+    cb(null, Date.now() + "-" + file.originalname);
   }
 })
 const upload = multer({ storage });
 
-app.post("/clip", (req, res) => {
-  const pythonProcess = spawn(
-    "python3",
-    [path.join(__dirname, "whisper_runner.py"), SAMPLE_AUDIO]
-  );
+app.post("/clip", upload.single("video"), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: "No video uploaded" });
 
-  let output = "";
+  const videoPath = req.file.path;
+  const endTime = Number(req.body.endTime) || 0;
+  const audioPath = videoPath.replace(/\.[^/.]+$/, ".mp3"); // mp3 output
 
-  pythonProcess.stdout.on("data", (data) => {
-    output += data.toString();
+  // Clip last 30s using ffmpeg
+  const ffmpeg = spawn("ffmpeg", [
+    "-i", videoPath,
+    "-ss", `${Math.max(0, endTime - 30)}`,
+    "-t", "30",
+    "-q:a", "0",
+    "-map", "a",
+    audioPath
+  ]);
+
+  ffmpeg.stderr.on("data", (data) => {
+    console.log("FFmpeg log:", data.toString());
   });
 
-  pythonProcess.stderr.on("data", (data) => {
-    console.error("Python error:", data.toString());
-  });
+  ffmpeg.on("close", (code) => {
+    if (code !== 0) return res.status(500).json({ error: "FFmpeg failed" });
 
-  pythonProcess.on("close", (code) => {
-    if (code === 0) {
-      try {
-        const cleanOutput = output.trim();
-        const result = JSON.parse(cleanOutput); // must be valid JSON
-        res.json({
-          summary: result.summary,
-          source_pages: result.source_pages,
-        });
-      } catch (err) {
-        console.error("Failed to parse Python output:", output);
-        res.status(500).json({ error: "Failed to parse Python output" });
+    // Call Python Whisper on clipped mp3
+    const pythonProcess = spawn(
+      "python3",
+      [path.join(__dirname, "whisper_runner.py"), path.join(__dirname, audioPath)]
+    );
+
+
+    let output = "";
+    pythonProcess.stdout.on("data", (data) => {
+      console.log("Whisper stdout:", data.toString());
+      output += data.toString();
+    });
+    pythonProcess.stderr.on("data", (data) => console.error("Python error:", data.toString()));
+
+    pythonProcess.on("close", (code) => {
+      if (code === 0) {
+        try {
+          const result = JSON.parse(output.trim());
+          res.json(result);
+        } catch (err) {
+          console.error("Failed to parse Python output:", output);
+          res.status(500).json({ error: "Failed to parse Python output" });
+        }
+      } else {
+        res.status(500).json({ error: "Whisper processing failed" });
       }
-    } else {
-      res.status(500).json({ error: "Processing failed" });
-    }
+    });
   });
 });
 
 app.post('/upload', upload.single('pdf'), (req, res) => {
-  console.log(req.file);
+  if (!req.file) {
+    return res.status(400).json({ error: "No PDF uploaded" });
+  }
+
+  console.log("PDF uploaded:", req.file.filename);
+
   res.json({ 
-    message: 'Files uploaded successfully', 
-    files: { pdf: [req.file] }
+    message: 'PDF uploaded successfully', 
+    file: req.file.filename
   });
-})
+});
+
 
 const PORT = 3000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
