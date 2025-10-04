@@ -31,12 +31,16 @@ def query_textbook(transcript: str, top_k: int = 3):
     """Return top_k relevant textbook chunks for a transcript."""
     query_embedding = embedding_model.encode([transcript], convert_to_numpy=True).tolist()[0]
 
-    results = index.query(
+    try:
+        results = index.query(
         vector=query_embedding,
         top_k=top_k,
         include_metadata=True
     )
-
+    except Exception as e:
+        print(json.dumps({"error": f"Pinecone query failed: {str(e)}"}))
+        sys.exit(1)
+        
     matches = []
     for match in results.get("matches", []):
         matches.append({
