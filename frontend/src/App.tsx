@@ -3,16 +3,20 @@ import Home from "./pages/Home";
 // import FileUploader from "./components/FileUploader";
 import { BrowserRouter as Router, Routes, Route } from "react-router";
 import VideoPlayer from "./pages/VideoPlayer";
+import { Toaster } from "sonner";
 
 
 export default function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/player" element={<VideoPlayer />} />
-      </Routes>
-    </Router>
+    <>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/player" element={<VideoPlayer />} />
+        </Routes>
+      </Router>
+      <Toaster />
+    </>
   );
   // const videoRef = useRef(null);
 

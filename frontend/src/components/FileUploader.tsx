@@ -1,4 +1,7 @@
+"use client"
+
 import React, { useState } from 'react';
+import { toast } from "sonner";
 import { useNavigate } from 'react-router';
 
 const FileUploader = () => {
@@ -20,28 +23,17 @@ const FileUploader = () => {
 
   const handleUpload = async () => {
     if (pdfFile && videoFile) {
-      console.log('Uploading files...');
-
-      const formData = new FormData();
-      formData.append('pdf', pdfFile);
-      formData.append('video', videoFile);
-
-      try {
-        const result = await fetch('https://httpbin.org/post', {
-          method: 'POST',
-          body: formData,
-        });
-
-        const data = await result.json();
-        console.log(data);
-
-        navigate("/player");
-      } catch (error) {
-        console.error(error);
-      }
+      // Pass files through navigation state
+      navigate("/player", { 
+        state: { 
+          pdfFile: pdfFile, 
+          videoFile: videoFile 
+        } 
+      });
     } else {
-      // Route to player page even without files (for demo purposes)
-      navigate("/player");
+      toast.error("Please select both files", {
+        description: "You need to upload both a PDF textbook and a video file to continue.",
+      });
     }
   };
 
@@ -105,7 +97,7 @@ const FileUploader = () => {
         onClick={handleUpload}
         className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg"
       >
-        {pdfFile && videoFile ? "Upload Files" : "Continue to Player (Demo)"}
+        {pdfFile && videoFile ? "Upload Files" : "Please Select Both Files"}
       </button>
     </div>
   );

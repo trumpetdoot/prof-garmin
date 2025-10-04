@@ -1,4 +1,5 @@
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
+import { useEffect } from "react";
 
 async function clipSegment() {
   const response = await fetch("http://localhost:3000/clip", {
@@ -13,6 +14,17 @@ async function clipSegment() {
 
 const VideoPlayer = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Get files from navigation state
+  const { pdfFile, videoFile } = location.state || {};
+
+  // Redirect if no files provided
+  useEffect(() => {
+    if (!pdfFile && !videoFile) {
+      navigate("/", { replace: true });
+    }
+  }, [pdfFile, videoFile, navigate]);
 
   const handleBackToUpload = () => {
     navigate("/");
@@ -24,15 +36,38 @@ const VideoPlayer = () => {
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Lecture Clipper MVP</h1>
           <p className="text-gray-600">Clip and transcribe important moments from your lecture</p>
+          
+          {/* Show received files */}
+          {(pdfFile || videoFile) && (
+            <div className="mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-green-800 mb-2">Files Received:</h3>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {pdfFile && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    📄 {pdfFile.name}
+                  </span>
+                )}
+                {videoFile && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    🎥 {videoFile.name}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
         
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
           <video 
             className="w-full max-w-4xl mx-auto rounded-lg shadow-md" 
             controls
-            poster="/sample-lecture-poster.jpg"
+            key={videoFile?.name} // Force re-render when video changes
           >
-            <source src="/sample-lecture.mp4" type="video/mp4" />
+            {videoFile ? (
+              <source src={URL.createObjectURL(videoFile)} type="video/mp4" />
+            ) : (
+              <source src="/sample-lecture.mp4" type="video/mp4" />
+            )}
             Your browser does not support the video tag.
           </video>
         </div>
