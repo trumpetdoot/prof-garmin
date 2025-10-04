@@ -1,41 +1,18 @@
-async function clipSegment() {
-  const response = await fetch("http://localhost:3000/clip", {
-    method: "POST",
-  });
-  const data = await response.json();
-  const transcriptElem = document.getElementById("transcript");
-  if (transcriptElem) {
-    transcriptElem.innerText = data.transcript;
-  }
-}
 // import { useRef } from "react";
 import Home from "./pages/Home";
 // import FileUploader from "./components/FileUploader";
-import { BrowserRouter as Router, Routes, Route, BrowserRouter } from "react-router";
-import UploadSuccess from "./pages/UploadSuccess";
+import { BrowserRouter as Router, Routes, Route } from "react-router";
+import VideoPlayer from "./pages/VideoPlayer";
 
 
 export default function App() {
   return (
-    <>
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h1>Lecture Clipper MVP</h1>
-      <video width="640" height="360" controls>
-        <source src="/sample-lecture.mp4" type="video/mp4" />
-      </video>
-      <br />
-      <button onClick={clipSegment} style={{ marginTop: "20px" }}>
-        Clip Last 30s
-      </button>
-      <div id="transcript" style={{ marginTop: "20px" }}></div>
-    </div>
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/success" element={<UploadSuccess />} />
+        <Route path="/player" element={<VideoPlayer />} />
       </Routes>
-    </Router> 
-    </>
+    </Router>
   );
   // const videoRef = useRef(null);
 
