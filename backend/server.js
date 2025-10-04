@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import multer from "multer";
 import { spawn } from "child_process";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
@@ -12,6 +13,13 @@ app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
 
 const SAMPLE_AUDIO = path.join(__dirname, "sample-clip.mp3");
+const storage = multer.diskStorage({
+  destination: './assets',
+  filename: (req, file, cb) => {
+    cb(null, file.originalname)
+  }
+})
+const upload = multer({ storage });
 
 app.post("/clip", (req, res) => {
   const pythonProcess = spawn(
@@ -47,6 +55,14 @@ app.post("/clip", (req, res) => {
     }
   });
 });
+
+app.post('/upload', upload.single('pdf'), (req, res) => {
+  console.log(req.file);
+  res.json({ 
+    message: 'Files uploaded successfully', 
+    files: { pdf: [req.file] }
+  });
+})
 
 const PORT = 3000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

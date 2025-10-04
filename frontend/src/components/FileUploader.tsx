@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { toast } from "sonner";
-import { useNavigate } from 'react-router';
+import { useNavigate } from "react-router";
 
 const FileUploader = () => {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
@@ -23,16 +23,33 @@ const FileUploader = () => {
 
   const handleUpload = async () => {
     if (pdfFile && videoFile) {
+      const formData = new FormData();
+      formData.append("pdf", pdfFile);
       // Pass files through navigation state
-      navigate("/player", { 
-        state: { 
-          pdfFile: pdfFile, 
-          videoFile: videoFile 
-        } 
-      });
+      try {
+        const res = await fetch("http://localhost:3000/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res) throw new Error("PDF upload failed");
+        const data = await res.json();
+        console.log("Uploaded: ", data);
+
+        navigate("/player", {
+          state: {
+            pdfFile: pdfFile,
+            videoFile: videoFile,
+          },
+        });
+      } catch (err) {
+        console.error(err);
+        toast.error("Upload Failed", { description: String(err) });
+      }
     } else {
       toast.error("Please select both files", {
-        description: "You need to upload both a PDF textbook and a video file to continue.",
+        description:
+          "You need to upload both a PDF textbook and a video file to continue.",
       });
     }
   };
@@ -45,23 +62,23 @@ const FileUploader = () => {
             Upload PDF Textbook:
           </label>
           <div className="relative">
-            <input 
-              type="file" 
-              accept=".pdf" 
+            <input
+              type="file"
+              accept=".pdf"
               onChange={handlePdfChange}
               className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
             />
           </div>
         </div>
-        
+
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">
             Upload Lecture Video (MP4):
           </label>
           <div className="relative">
-            <input 
-              type="file" 
-              accept="video/mp4" 
+            <input
+              type="file"
+              accept="video/mp4"
               onChange={handleVideoChange}
               className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 cursor-pointer"
             />
@@ -71,14 +88,18 @@ const FileUploader = () => {
 
       {(pdfFile || videoFile) && (
         <div className="bg-gray-50 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-gray-900 mb-3">Selected Files:</h3>
+          <h3 className="text-sm font-medium text-gray-900 mb-3">
+            Selected Files:
+          </h3>
           <ul className="space-y-2">
             {pdfFile && (
               <li className="flex items-center space-x-2 text-sm text-gray-600">
                 <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                 <span className="font-medium">PDF:</span>
-                <span>{pdfFile.name}</span> 
-                <span className="text-gray-400">({(pdfFile.size / 1024 / 1024).toFixed(2)} MB)</span>
+                <span>{pdfFile.name}</span>
+                <span className="text-gray-400">
+                  ({(pdfFile.size / 1024 / 1024).toFixed(2)} MB)
+                </span>
               </li>
             )}
             {videoFile && (
@@ -86,14 +107,16 @@ const FileUploader = () => {
                 <span className="w-2 h-2 bg-green-500 rounded-full"></span>
                 <span className="font-medium">Video:</span>
                 <span>{videoFile.name}</span>
-                <span className="text-gray-400">({(videoFile.size / 1024 / 1024).toFixed(2)} MB)</span>
+                <span className="text-gray-400">
+                  ({(videoFile.size / 1024 / 1024).toFixed(2)} MB)
+                </span>
               </li>
             )}
           </ul>
         </div>
       )}
 
-      <button 
+      <button
         onClick={handleUpload}
         className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg"
       >
