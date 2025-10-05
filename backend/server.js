@@ -4,7 +4,7 @@ import multer from "multer";
 import { spawn } from "child_process";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
-import AiContinuation from "./routes/ai-continuation.js";
+// import AiContinuation from "./routes/ai-continuation.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -15,7 +15,7 @@ app.use(express.json());
 
 
 
-app.use("/ai-continuation", aiContinuation);
+// app.use("/ai-continuation", aiContinuation);
 
 
 
