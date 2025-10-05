@@ -4,6 +4,7 @@ import multer from "multer";
 import { spawn } from "child_process";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
+import AiContinuation from "./routes/ai-continuation.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -11,6 +12,12 @@ const __dirname = dirname(__filename);
 const app = express();
 app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
+
+
+
+app.use("/ai-continuation", aiContinuation);
+
+
 
 const storage = multer.diskStorage({
   destination: './assets',
