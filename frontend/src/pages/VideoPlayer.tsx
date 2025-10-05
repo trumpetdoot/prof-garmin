@@ -74,6 +74,13 @@ const VideoPlayer = () => {
           </button>
         </div>
 
+        <button
+          onClick={() => navigate("/lecture-ai", { state: { videoFile } })}
+          className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg"
+        >
+          🎓 Generate Lecture AI
+        </button>
+
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Transcript:

@@ -4,10 +4,10 @@ import multer from "multer";
 import fs from "fs";
 import path from "path";
 
-import { extractClip, extractFrame } from "utils/video.js";
-import { generateTranscript } from "utils/transcript.js";
-import { generateAISprite } from "utils/aiSprite.js";
-import { generateLectureScript } from "utils/scriptGen.js";
+import { extractClip, extractFrame } from "./utils/video.js";
+import { generateTranscript } from "./utils/transcript.js";
+// import { generateAISprite } from "utils/aiSprite.js";
+import { generateLectureScript } from "./utils/scriptGen.js";
 
 const router = express.Router();
 
@@ -38,8 +38,8 @@ router.post("/clip", upload.single("video"), async (req, res) => {
     // Step 3: generate transcript
     const transcript = await generateTranscript(clipPath);
 
-    // Step 4: generate AI sprite
-    const sprite = await generateAISprite(framePath);
+    // // Step 4: generate AI sprite
+    // const sprite = await generateAISprite(framePath);
 
     // Step 5: generate lecture continuation
     const script = await generateLectureScript(transcript, req.body.textbookRefs || []);
@@ -48,7 +48,7 @@ router.post("/clip", upload.single("video"), async (req, res) => {
       message: "AI continuation ready",
       clipPath: `/clips/${path.basename(clipPath)}`,
       transcript,
-      sprite,
+      // sprite,
       script
     });
   } catch (err) {

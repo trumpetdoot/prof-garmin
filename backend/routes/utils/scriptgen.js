@@ -4,7 +4,7 @@ export async function generateLectureScript(transcript, textbookRefs = []) {
   return new Promise((resolve, reject) => {
     const py = spawn(
       "python3",
-      ["scriptGen.py", JSON.stringify(transcript), JSON.stringify(textbookRefs)]
+      ["routes/utils/scriptGen.py", JSON.stringify(transcript), JSON.stringify(textbookRefs)]
     );
 
     let result = "";
