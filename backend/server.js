@@ -4,6 +4,8 @@ import multer from "multer";
 import { spawn } from "child_process";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
+// AI-CONTIUATION IMPORT
+import AiContinuation from "./routes/ai-continuation.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -19,6 +21,11 @@ const storage = multer.diskStorage({
   }
 })
 const upload = multer({ storage });
+// ROUTE TO AI-CONTINUATION
+app.use("/ai-continuation", aiContinuation);
+// --
+
+// const SAMPLE_AUDIO = path.join(__dirname, "sample-clip.mp3");
 
 app.post("/clip", upload.single("video"), (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No video uploaded" });
