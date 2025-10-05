@@ -24,10 +24,13 @@ const VideoPlayer = () => {
     formData.append("endTime", String(endTime));
 
     try {
-      const response = await fetch("http://localhost:3000/clip", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        "http://localhost:3000/api/whisper/transcribe",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       const data = await response.json();
       const transcriptElem = document.getElementById("transcript");
