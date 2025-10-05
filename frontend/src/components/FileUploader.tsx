@@ -27,14 +27,14 @@ const FileUploader = () => {
       formData.append("pdf", pdfFile);
 
       try {
-        const res = await fetch("http://localhost:3000/upload", {
+        const res = await fetch("http://localhost:3000/api/textbook/upload", {
           method: "POST",
           body: formData,
         });
 
         if (!res.ok) throw new Error("PDF upload failed");
         const data = await res.json();
-        console.log("Uploaded PDF: ", data);
+        console.log("PDF Uploaded: ", data);
 
         // Navigate to player, keep video in state (not uploaded yet)
         navigate("/player", {
