@@ -3,7 +3,7 @@ import axios from "axios";
 
 type LectureResult = {
   clipPath: string;
-  framePath?: string; // optional if you don't generate sprite
+  framePath?: string;
   transcript: string;
   script: string;
 };
@@ -46,52 +46,92 @@ export default function LectureUploader({
   };
 
   return (
-    <div>
-      {!videoFile && (
-        <input
-          type="file"
-          accept="video/*"
-          onChange={(e) => {
-            const files = e.target.files;
-            setVideoFile(files && files.length > 0 ? files[0] : null);
-          }}
-          className="form-control my-3"
-        />
-      )}
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 py-12 px-4">
+      <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-6 text-center">
+          🎓 Lecture Generator
+        </h1>
 
-      <button onClick={handleUpload} className="btn btn-primary">
-        Generate Lecture
-      </button>
+        {!videoFile && (
+          <div className="flex justify-center mb-6">
+            <input
+              type="file"
+              accept="video/*"
+              onChange={(e) => {
+                const files = e.target.files;
+                setVideoFile(files && files.length > 0 ? files[0] : null);
+              }}
+              className="border-2 border-dashed border-gray-300 rounded-lg p-4 w-full cursor-pointer text-gray-700 text-center"
+            />
+          </div>
+        )}
 
-      {loading && <p className="mt-3">⏳ Processing...</p>}
-
-      {result && (
-        <div className="mt-4">
-          <h3>Video Clip</h3>
-          <video
-            src={`http://localhost:3000${result.clipPath}`}
-            controls
-            width="480"
-          ></video>
-
-          {result.framePath && (
-            <>
-              <h3 className="mt-3">Professor Sprite</h3>
-              <img
-                src={`http://localhost:3000${result.framePath}`}
-                alt="Professor Sprite"
-                width="200"
-              />
-            </>
-          )}
-
-          <h3 className="mt-3">Transcript</h3>
-          <p>{result.transcript}</p>
-
-          <h3 className="mt-3">Lecture Continuation</h3>
-          <p>{result.script}</p>
+        <div className="flex justify-center mb-6">
+          <button
+            onClick={handleUpload}
+            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md"
+          >
+            Generate Lecture
+          </button>
         </div>
-      )}
+
+        {loading && (
+          <p className="text-center text-gray-700 mt-3 animate-pulse">
+            ⏳ Processing...
+          </p>
+        )}
+
+        {result && (
+          <div className="mt-6 space-y-6">
+            {/* Video Clip */}
+            <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                📹 Video Clip
+              </h3>
+              <video
+                src={`http://localhost:3000${result.clipPath}`}
+                controls
+                className="w-full rounded-lg"
+              ></video>
+            </div>
+
+            {/* Professor Sprite */}
+            {result.framePath && (
+              <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                  🧑‍🏫 Professor Sprite
+                </h3>
+                <img
+                  src={`http://localhost:3000${result.framePath}`}
+                  alt="Professor Sprite"
+                  className="mx-auto rounded-lg border"
+                  width={200}
+                />
+              </div>
+            )}
+
+            {/* Transcript */}
+            <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                📝 Transcript
+              </h3>
+              <p className="text-gray-700 whitespace-pre-wrap">
+                {result.transcript}
+              </p>
+            </div>
+
+            {/* Lecture Continuation */}
+            <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                📖 Lecture Continuation
+              </h3>
+              <p className="text-gray-700 whitespace-pre-wrap">
+                {result.script}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
