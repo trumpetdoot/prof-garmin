@@ -61,11 +61,11 @@ def summarize_transcript(transcript: str, top_k: int = 3, max_length: int = 250)
     combined_text = "\n\n".join([f"Page {chunk['page']}:\n{chunk['text']}" for chunk in top_chunks])
     source_pages = [chunk["page"] for chunk in top_chunks]
 
-    summary_result = summarizer(combined_text, max_length=max_length, min_length=50, do_sample=False)
-    summary = summary_result[0]["summary_text"]
+    # summary_result = summarizer(combined_text, max_length=max_length, min_length=50, do_sample=False)
+    # summary = summary_result[0]["summary_text"]
 
     return {
-        "summary": summary.strip(),
+        "summary": combined_text.strip(),
         "source_pages": source_pages
     }
 
